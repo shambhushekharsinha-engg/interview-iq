@@ -1,5 +1,6 @@
 import fs from "fs"
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+import mongoose from "mongoose";
 import { askAi } from "../services/openRouter.service.js";
 import User from "../models/user.model.js";
 import Interview from "../models/interview.model.js";
@@ -92,6 +93,10 @@ export const generateQuestion = async (req, res) => {
 
     if (!role || !experience || !mode) {
       return res.status(400).json({ message: "Role, Experience and Mode are required." })
+    }
+
+    if (mode !== "HR" && mode !== "Technical") {
+      return res.status(400).json({ message: "Invalid mode. Must be 'HR' or 'Technical'." })
     }
 
     const user = await User.findById(req.userId)
@@ -227,7 +232,23 @@ export const submitAnswer = async (req, res) => {
   try {
     const { interviewId, questionIndex, answer, timeTaken } = req.body
 
+    if (!interviewId || !mongoose.Types.ObjectId.isValid(interviewId)) {
+      return res.status(400).json({ message: "Valid Interview ID is required." })
+    }
+
+    if (typeof questionIndex !== "number" || questionIndex < 0) {
+      return res.status(400).json({ message: "Valid non-negative question index is required." })
+    }
+
     const interview = await Interview.findById(interviewId)
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found." })
+    }
+
+    if (questionIndex >= interview.questions.length) {
+      return res.status(400).json({ message: "Question index is out of bounds." })
+    }
+
     const question = interview.questions[questionIndex]
 
     // If no answer
@@ -337,9 +358,14 @@ Answer: ${answer}
 export const finishInterview = async (req,res) => {
   try {
     const {interviewId} = req.body
+
+    if (!interviewId || !mongoose.Types.ObjectId.isValid(interviewId)) {
+      return res.status(400).json({ message: "Valid Interview ID is required." })
+    }
+
     const interview = await Interview.findById(interviewId)
     if(!interview){
-      return res.status(400).json({message:"failed to find Interview"})
+      return res.status(404).json({message:"Interview not found."})
     }
 
     const totalQuestions = interview.questions.length;
@@ -412,7 +438,13 @@ export const getMyInterviews = async (req,res) => {
 
 export const getInterviewReport = async (req,res) => {
   try {
-    const interview = await Interview.findById(req.params.id)
+    const { id } = req.params;
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Valid Interview ID is required." })
+    }
+
+    const interview = await Interview.findById(id)
 
     if (!interview) {
       return res.status(404).json({ message: "Interview not found" });
