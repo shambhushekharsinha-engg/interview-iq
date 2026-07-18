@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: interview_iq_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  server:
+    build: ./server
+    container_name: interview_iq_server
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - MONGODB_URL=mongodb://mongodb:27017/interview-iq
+      - JWT_SECRET=jwt_super_secret_for_mock_testing_12345
+      - OPENROUTER_API_KEY=mock_openrouter_key
+      - RAZORPAY_KEY_ID=mock_razorpay_key
+      - RAZORPAY_KEY_SECRET=mock_razorpay_secret
+    depends_on:
+      - mongodb
+
+  client:
+    build: ./client
+    container_name: interview_iq_client
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+
+volumes:
+  mongo_data:
