@@ -11,6 +11,10 @@ import axios from "axios"
 import { ServerUrl } from '../App'
 import { BsArrowRight } from 'react-icons/bs'
 
+// Module-scoped tracking array to pin active references 
+// and absolute shield them from global Garbage Collection.
+const activeUtterances = [];
+
 function Step2Interview({ interviewData, onFinish }) {
   const { interviewId, questions, userName } = interviewData;
   const [isIntroPhase, setIsIntroPhase] = useState(true);
@@ -98,6 +102,9 @@ function Step2Interview({ interviewData, onFinish }) {
         .replace(/\./g, ". ... ");
 
       const utterance = new SpeechSynthesisUtterance(humanText);
+      
+      // Pin reference immediately to survive execution context sweeping
+      activeUtterances.push(utterance);
 
       utterance.voice = selectedVoice;
 
@@ -112,13 +119,20 @@ function Step2Interview({ interviewData, onFinish }) {
         videoRef.current?.play();
       };
 
+      const cleanupUtterance = () => {
+        const index = activeUtterances.indexOf(utterance);
+        if (index > -1) {
+          activeUtterances.splice(index, 1);
+        }
+      };
 
       utterance.onend = () => {
+        cleanupUtterance();
         videoRef.current?.pause();
-        videoRef.current.currentTime = 0;
+        if (videoRef.current) {
+          videoRef.current.currentTime = 0;
+        }
         setIsAIPlaying(false);
-
-
 
         if (isMicOn) {
           startMic();
@@ -129,9 +143,21 @@ function Step2Interview({ interviewData, onFinish }) {
         }, 300);
       };
 
+      utterance.onerror = (event) => {
+        console.error("Speech Synthesis exception encountered:", event);
+        cleanupUtterance();
+        
+        // Fail-safe layout unlocking
+        videoRef.current?.pause();
+        setIsAIPlaying(false);
+        if (isMicOn) {
+          startMic();
+        }
+        setSubtitle("");
+        resolve();
+      };
 
       setSubtitle(text);
-
       window.speechSynthesis.speak(utterance);
     });
   };
@@ -263,8 +289,8 @@ function Step2Interview({ interviewData, onFinish }) {
       speakText(result.data.feedback)
       setIsSubmitting(false)
     } catch (error) {
-console.log(error)
-setIsSubmitting(false)
+      console.log(error)
+      setIsSubmitting(false)
     }
   }
 
@@ -318,6 +344,8 @@ setIsSubmitting(false)
       }
 
       window.speechSynthesis.cancel();
+      // Flush residual active track anchors on component teardown
+      activeUtterances.length = 0;
     };
   }, []);
 
@@ -415,16 +443,17 @@ setIsSubmitting(false)
          {!feedback ? ( <div className='flex items-center gap-4 mt-6'>
             <motion.button
               onClick={toggleMic}
+              disabled={isAIPlaying}
               whileTap={{ scale: 0.9 }}
-              className='w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-full bg-black text-white shadow-lg'>
+              className='w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-full bg-black text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed'>
               {isMicOn ? <FaMicrophone size={20} /> : <FaMicrophoneSlash size={20}/>}
             </motion.button>
 
             <motion.button
             onClick={submitAnswer}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isAIPlaying}
               whileTap={{ scale: 0.95 }}
-              className='flex-1 bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-3 sm:py-4 rounded-2xl shadow-lg hover:opacity-90 transition font-semibold disabled:bg-gray-500'>
+              className='flex-1 bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-3 sm:py-4 rounded-2xl shadow-lg hover:opacity-90 transition font-semibold disabled:bg-gray-400 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed'>
               {isSubmitting?"Submitting...":"Submit Answer"}
 
             </motion.button>
@@ -438,8 +467,8 @@ setIsSubmitting(false)
 
               <button
               onClick={handleNext}
-
-               className='w-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-3 rounded-xl shadow-md hover:opacity-90 transition flex items-center justify-center gap-1'>
+              disabled={isAIPlaying}
+               className='w-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-3 rounded-xl shadow-md hover:opacity-90 transition flex items-center justify-center gap-1 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed'>
                 Next Question <BsArrowRight size={18}/>
               </button>
 
