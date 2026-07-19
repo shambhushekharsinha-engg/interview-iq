@@ -177,7 +177,7 @@ function Step1SetUp({ onStart }) {
                             <motion.div
                                 whileHover={{ scale: 1.02 }}
                                 onClick={() => document.getElementById("resumeUpload").click()}
-                                className='border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-green-500 hover:bg-green-50 transition'>
+                                className='border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-green-500 hover:bg-green-50 transition transform hover:scale-[1.015] duration-300'>
 
                                 <FaFileUpload className='text-4xl mx-auto text-green-600 mb-3' />
 
