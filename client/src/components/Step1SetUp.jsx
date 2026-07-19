@@ -116,7 +116,7 @@ function Step1SetUp({ onStart }) {
                                     animate={{ y: 0, opacity: 1 }}
                                     transition={{ delay: 0.3 + index * 0.15 }}
                                     whileHover={{ scale: 1.03 }}
-                                    className='flex items-center space-x-4 bg-white p-4 rounded-xl shadow-sm cursor-pointer'>
+                                    className='flex items-center space-x-4 bg-white p-4 rounded-xl shadow-sm cursor-pointer transition-transform duration-300'>
                                     {item.icon}
                                     <span className='text-gray-700 font-medium'>{item.text}</span>
 
