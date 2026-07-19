@@ -148,7 +148,7 @@ function Step1SetUp({ onStart }) {
                             <FaUserTie className='absolute top-4 left-4 text-gray-400' />
 
                             <input type='text' placeholder='Enter role'
-                                className='w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition'
+                                className='w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition'
                                 onChange={(e) => setRole(e.target.value)} value={role} />
                         </div>
 
