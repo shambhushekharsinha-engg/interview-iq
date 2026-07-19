@@ -1,5 +1,6 @@
 import mongoose from "mongoose"
 
+// Schema representing client subscription payments and credit allocations
 const paymentSchema = new mongoose.Schema({
      userId: {
       type: mongoose.Schema.Types.ObjectId,
