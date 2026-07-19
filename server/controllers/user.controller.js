@@ -1,6 +1,12 @@
 import User from "../models/user.model.js"
 
 
+/**
+ * Retrieves the currently logged-in user\'s profile details.
+ * @param {Object} req - Express request object containing userId
+ * @param {Object} res - Express response object
+ * @returns {Object} User profile details JSON response
+ */
 export const getCurrentUser = async (req,res) => {
     try {
         const userId = req.userId
