@@ -13,6 +13,7 @@ correctness: { type: Number, default: 0 },
 })
 
 
+// Main schema tracking user mock sessions, generated questions, and OpenRouter AI metrics
 const interviewSchema = new mongoose.Schema({
     userId:{
         type:mongoose.Schema.Types.ObjectId,
