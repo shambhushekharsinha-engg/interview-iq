@@ -2,6 +2,12 @@ import genToken from "../config/token.js"
 import User from "../models/user.model.js"
 
 
+/**
+ * Handles Google OAuth authentication flow.
+ * @param {Object} req - Express request object containing displayName and email
+ * @param {Object} res - Express response object
+ * @returns {Object} User details and auth session cookie
+ */
 export const googleAuth = async (req,res) => {
     try {
         const {name , email} = req.body
