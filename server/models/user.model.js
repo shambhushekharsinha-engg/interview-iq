@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+// Schema definition representing user attributes and remaining mock credits
 const userSchema = new mongoose.Schema({
     name:{
         type:String,
