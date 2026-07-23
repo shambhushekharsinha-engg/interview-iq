@@ -25,11 +25,13 @@ function Step1SetUp({ onStart }) {
     const [resumeText, setResumeText] = useState("");
     const [analysisDone, setAnalysisDone] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
 
     const handleUploadResume = async () => {
         if (!resumeFile || analyzing) return;
         setAnalyzing(true)
+        setErrorMessage("")
 
         const formdata = new FormData()
         formdata.append("resume", resumeFile)
@@ -50,12 +52,14 @@ function Step1SetUp({ onStart }) {
 
         } catch (error) {
             console.log(error)
+            setErrorMessage(error.response?.data?.message || "Failed to analyze resume. Please try again.")
             setAnalyzing(false);
         }
     }
 
     const handleStart = async () => {
         setLoading(true)
+        setErrorMessage("")
         try {
            const result = await axios.post(ServerUrl + "/api/interview/generate-questions" , {role, experience, mode , resumeText, projects, skills } , {withCredentials:true}) 
            console.log(result.data)
@@ -67,6 +71,7 @@ function Step1SetUp({ onStart }) {
 
         } catch (error) {
             console.log(error)
+            setErrorMessage(error.response?.data?.message || "An unexpected error occurred. Please try again.")
             setLoading(false)
         }
     }
@@ -246,6 +251,12 @@ function Step1SetUp({ onStart }) {
                                 )}
 
                             </motion.div>
+                        )}
+
+                        {errorMessage && (
+                            <div className='p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-center text-xs md:text-sm font-medium mb-4'>
+                                {errorMessage}
+                            </div>
                         )}
 
 
