@@ -15,7 +15,12 @@ function Step2Interview({ interviewData, onFinish }) {
   const { interviewId, questions, userName } = interviewData;
   const [isIntroPhase, setIsIntroPhase] = useState(true);
 
-  const [isMicOn, setIsMicOn] = useState(true);
+  const [isSpeechSupported, setIsSpeechSupported] = useState(
+    typeof window !== "undefined" && !!(window.SpeechRecognition || window.webkitSpeechRecognition)
+  );
+  const [isMicOn, setIsMicOn] = useState(
+    typeof window !== "undefined" && !!(window.SpeechRecognition || window.webkitSpeechRecognition)
+  );
   const recognitionRef = useRef(null);
   const [isAIPlaying, setIsAIPlaying] = useState(false);
 
@@ -203,9 +208,14 @@ function Step2Interview({ interviewData, onFinish }) {
 
 
   useEffect(() => {
-    if (!("webkitSpeechRecognition" in window)) return;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setIsSpeechSupported(false);
+      setIsMicOn(false);
+      return;
+    }
 
-    const recognition = new window.webkitSpeechRecognition();
+    const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
     recognition.continuous = true;
     recognition.interimResults = false;
@@ -405,6 +415,11 @@ setIsSubmitting(false)
             <div className='text-base sm:text-lg font-semibold text-gray-800 leading-relaxed '>{currentQuestion?.question}</div>
           </div>)
           }
+          {!isSpeechSupported && (
+            <div className='p-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-xl text-xs sm:text-sm font-medium mb-4 text-center'>
+              Voice input is not supported in your browser. Please type your answers directly in the field.
+            </div>
+          )}
           <textarea
             placeholder="Type your answer here..."
             onChange={(e) => setAnswer(e.target.value)}
@@ -414,10 +429,11 @@ setIsSubmitting(false)
 
          {!feedback ? ( <div className='flex items-center gap-4 mt-6'>
             <motion.button
-              onClick={toggleMic}
-              whileTap={{ scale: 0.9 }}
-              className='w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-full bg-black text-white shadow-lg'>
-              {isMicOn ? <FaMicrophone size={20} /> : <FaMicrophoneSlash size={20}/>}
+              onClick={isSpeechSupported ? toggleMic : null}
+              whileTap={isSpeechSupported ? { scale: 0.9 } : {}}
+              className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-full bg-black text-white shadow-lg transition-colors ${!isSpeechSupported ? "opacity-50 cursor-not-allowed bg-gray-400" : ""}`}
+            >
+              {isMicOn && isSpeechSupported ? <FaMicrophone size={20} /> : <FaMicrophoneSlash size={20}/>}
             </motion.button>
 
             <motion.button
