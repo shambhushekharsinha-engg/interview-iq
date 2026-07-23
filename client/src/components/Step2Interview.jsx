@@ -177,7 +177,7 @@ function Step2Interview({ interviewData, onFinish }) {
 
 
   useEffect(() => {
-    if (isIntroPhase) return;
+    if (isIntroPhase || isSubmitting || !!feedback) return;
     if (!currentQuestion) return;
     
     const timer = setInterval(() => {
@@ -193,7 +193,7 @@ function Step2Interview({ interviewData, onFinish }) {
 
     return () => clearInterval(timer)
 
-  }, [isIntroPhase, currentIndex])
+  }, [isIntroPhase, currentIndex, isSubmitting, feedback])
 
   useEffect(() => {
   if (!isIntroPhase && currentQuestion) {
