@@ -53,22 +53,19 @@ export const verifyPayment = async (req,res) => {
       return res.status(400).json({ message: "Invalid payment signature" });
     }
 
-     const payment = await Payment.findOne({
-      razorpayOrderId: razorpay_order_id,
-    });
+     const payment = await Payment.findOneAndUpdate(
+      { razorpayOrderId: razorpay_order_id, status: { $ne: "paid" } },
+      { $set: { status: "paid", razorpayPaymentId: razorpay_payment_id } },
+      { new: true }
+    );
 
     if (!payment) {
+      const existingPayment = await Payment.findOne({ razorpayOrderId: razorpay_order_id });
+      if (existingPayment && existingPayment.status === "paid") {
+        return res.json({ message: "Already processed" });
+      }
       return res.status(404).json({ message: "Payment not found" });
     }
-
-    if (payment.status === "paid") {
-      return res.json({ message: "Already processed" });
-    }
-
-    // Update payment record
-    payment.status = "paid";
-    payment.razorpayPaymentId = razorpay_payment_id;
-    await payment.save();
 
     // Add credits to user
     const updatedUser = await User.findByIdAndUpdate(payment.userId, {
