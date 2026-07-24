@@ -94,6 +94,11 @@ export const generateQuestion = async (req, res) => {
       return res.status(400).json({ message: "Role, Experience and Mode are required." })
     }
 
+    const allowedModes = ["HR", "Technical"];
+    if (!allowedModes.includes(mode)) {
+      return res.status(400).json({ message: "Invalid mode. Allowed modes are 'HR' or 'Technical'." })
+    }
+
     const user = await User.findById(req.userId)
 
     if (!user) {
