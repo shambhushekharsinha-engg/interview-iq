@@ -10,6 +10,7 @@ function Pricing() {
   const navigate = useNavigate()
   const [selectedPlan, setSelectedPlan] = useState("free");
   const [loadingPlan, setLoadingPlan] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
   const dispatch = useDispatch()
 
   const plans = [
@@ -61,6 +62,7 @@ function Pricing() {
   const handlePayment = async (plan) => {
     try {
       setLoadingPlan(plan.id)
+      setErrorMessage("")
 
       const amount =  
       plan.id === "basic" ? 100 :
@@ -101,6 +103,8 @@ function Pricing() {
       setLoadingPlan(null);
     } catch (error) {
      console.log(error)
+     const msg = error.response?.data?.message || "Failed to initialize payment session. Please try again.";
+     setErrorMessage(msg);
      setLoadingPlan(null);
     }
   }
@@ -126,6 +130,11 @@ function Pricing() {
         </div>
       </div>
 
+      {errorMessage && (
+        <div className="max-w-6xl mx-auto mb-8 p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-center text-sm font-medium">
+          {errorMessage}
+        </div>
+      )}
 
       <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto'>
 
