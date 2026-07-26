@@ -3,6 +3,7 @@ import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { askAi } from "../services/openRouter.service.js";
 import User from "../models/user.model.js";
 import Interview from "../models/interview.model.js";
+import { safeParseLLMJson } from "../middlewares/jsonParser.js"; // Imported the required safe parser component
 
 export const analyzeResume = async (req, res) => {
   try {
@@ -57,9 +58,19 @@ Return strictly JSON:
 
     const aiResponse = await askAi(messages)
 
-    const parsed = JSON.parse(aiResponse);
+    // Applied safe markdown-aware parsing logic to handle LLM quirks safely
+    const parsed = safeParseLLMJson(aiResponse);
 
-    fs.unlinkSync(filepath)
+    // Clean up file artifacts before running error evaluations
+    if (fs.existsSync(filepath)) {
+      fs.unlinkSync(filepath)
+    }
+
+    if (!parsed) {
+      return res.status(422).json({
+        message: "Failed to parse structured matrix from the AI response. Please try again."
+      });
+    }
 
 
     res.json({
@@ -314,8 +325,14 @@ Answer: ${answer}
 
     const aiResponse = await askAi(messages)
 
+    // Applied safe markdown-aware parsing logic here as well
+    const parsed = safeParseLLMJson(aiResponse);
 
-    const parsed = JSON.parse(aiResponse);
+    if (!parsed) {
+      return res.status(422).json({
+        message: "Failed to accurately extract scoring metrics from the AI evaluation engine."
+      });
+    }
 
     question.answer = answer;
     question.confidence = parsed.confidence;
@@ -454,7 +471,3 @@ export const getInterviewReport = async (req,res) => {
     return res.status(500).json({message:`failed to find currentUser Interview report ${error}`})
   }
 }
-
-
-
-
